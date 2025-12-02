@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Please provide both email and password.';
     } else {
         try {
-            $pdo = get_pdo();
+ $pdo = get_pdo();
             $stmt = $pdo->prepare('SELECT user_id, full_name, email, password_hash, role, is_active FROM users_login WHERE email = :email');
             $stmt->execute([':email' => $email]);
             $user = $stmt->fetch();
@@ -29,17 +29,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = 'Account not found. Please double-check your email.';
             } elseif (!$user['is_active']) {
                 $error = 'This account is inactive. Contact an administrator.';
-            } elseif (!password_verify($password, (string) $user['password_hash'])) {
-                $error = 'Incorrect password. Please try again.';
             } else {
-                $_SESSION['user'] = [
-                    'id' => $user['user_id'],
-                    'name' => $user['full_name'],
-                    'email' => $user['email'],
-                    'role' => $user['role'] ?: 'USER',
-                ];
-                header('Location: leads_dashboard.php');
-                exit;
+                $storedPassword = (string) $user['password_hash'];
+
+                $isHash = preg_match('/^\$(2[aby]|argon2i|argon2id)\$/', $storedPassword) === 1;
+                $isValid = $isHash ? password_verify($password, $storedPassword) : hash_equals($storedPassword, $password);
+
+                if (!$isValid) {
+                    $error = 'Incorrect password. Please try again.';
+                } else {
+                    $_SESSION['user'] = [
+                        'id' => $user['user_id'],
+                        'name' => $user['full_name'],
+                        'email' => $user['email'],
+                        'role' => $user['role'] ?: 'USER',
+                    ];
+                    header('Location: leads_dashboard.php');
+                    exit;
+                }
             }
         } catch (Throwable $e) {
             $error = format_db_error($e, 'users_login table');
