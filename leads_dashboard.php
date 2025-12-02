@@ -100,11 +100,13 @@ try {
           $options[$field] = $stmt->fetchAll(PDO::FETCH_COLUMN);
       }
 
-      $statusOptions = array_unique(array_merge(['Open', 'In Progress', 'Closed'], $options['status'] ?? []));
+   $statusOptions = array_unique(array_merge(['Open', 'In Progress', 'Closed'], $options['status'] ?? []));
     } catch (Throwable $e) {
       $error = format_db_error($e, 'leads_tracking table');
       $leads = [];
     }
+
+    $leadsForJs = json_encode($leads, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
 
 function h(?string $value): string
 {
@@ -160,16 +162,26 @@ function h(?string $value): string
         <input type="hidden" name="action" value="save">
         <div>
           <label class="label" for="lead_id">Lead ID</label>
-          <input class="input" type="text" id="lead_id" name="id" value="<?php echo h((string) ($editing['id'] ?? '')); ?>" placeholder="Auto" readonly>
+  <input class="input" list="lead-id-options" type="text" id="lead_id" name="id" value="<?php echo h((string) ($editing['id'] ?? '')); ?>" placeholder="Enter existing ID or leave blank">
+          <datalist id="lead-id-options">
+            <?php foreach ($leads as $lead): ?>
+              <option value="<?php echo h((string) $lead['id']); ?>"></option>
+            <?php endforeach; ?>
+          </datalist>
         </div>
         <div>
           <label class="label" for="platform">Platform</label>
-          <input class="input" list="platform-options" type="text" id="platform" name="platform" value="<?php echo h($editing['platform'] ?? ''); ?>" placeholder="Website, Phone, Social" required>
-          <datalist id="platform-options">
-            <?php foreach ($options['platform'] ?? [] as $platform): ?>
-              <option value="<?php echo h($platform); ?>"></option>
-            <?php endforeach; ?>
-          </datalist>
+          <select id="platform" name="platform" required>
+            <option value="" disabled <?php echo empty($editing['platform']) ? 'selected' : ''; ?>>Select a platform</option>
+            <?php
+              $currentPlatform = $editing['platform'] ?? '';
+              $platformChoices = array_unique(array_merge($platformOptions, $options['platform'] ?? []));
+              foreach ($platformChoices as $platform) {
+                  $selected = $currentPlatform === $platform ? 'selected' : '';
+                  echo '<option value="' . h($platform) . '" ' . $selected . '>' . h($platform) . '</option>';
+              }
+            ?>
+          </select>
         </div>
         <div>
           <label class="label" for="contact_email">Contact email</label>
@@ -200,12 +212,17 @@ function h(?string $value): string
         </div>
         <div>
           <label class="label" for="business_unit">Business unit</label>
-          <input class="input" list="business-unit-options" type="text" id="business_unit" name="business_unit" value="<?php echo h($editing['business_unit'] ?? ''); ?>" placeholder="Unit or division">
-          <datalist id="business-unit-options">
-            <?php foreach ($options['business_unit'] ?? [] as $businessUnit): ?>
-              <option value="<?php echo h($businessUnit); ?>"></option>
-            <?php endforeach; ?>
-          </datalist>
+<select id="business_unit" name="business_unit">
+            <option value="" disabled <?php echo empty($editing['business_unit']) ? 'selected' : ''; ?>>Select a business unit</option>
+            <?php
+              $currentBusinessUnit = $editing['business_unit'] ?? '';
+              $businessUnitChoices = array_unique(array_merge($businessUnits, $options['business_unit'] ?? []));
+              foreach ($businessUnitChoices as $businessUnit) {
+                  $selected = $currentBusinessUnit === $businessUnit ? 'selected' : '';
+                  echo '<option value="' . h($businessUnit) . '" ' . $selected . '>' . h($businessUnit) . '</option>';
+              }
+            ?>
+          </select>
         </div>
         <div>
           <label class="label" for="owner">Owner</label>
@@ -274,13 +291,70 @@ function h(?string $value): string
           <button type="submit" class="btn btn-primary" onclick="return confirm('Delete selected leads?');">Delete selected</button>
         </form>
       </div>
-      <div class="table-wrapper">
+ <div class="table-wrapper">
+        <div class="filter-bar">
+          <div class="filter-item">
+            <label for="filter_platform">Platform</label>
+            <select id="filter_platform" data-field="platform">
+              <option value="">All</option>
+              <?php foreach ($options['platform'] ?? [] as $platform): ?>
+                <option value="<?php echo h($platform); ?>"><?php echo h($platform); ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="filter-item">
+            <label for="filter_contact_email">Contact</label>
+            <select id="filter_contact_email" data-field="contact_email">
+              <option value="">All</option>
+              <?php foreach ($options['contact_email'] ?? [] as $contactEmail): ?>
+                <option value="<?php echo h($contactEmail); ?>"><?php echo h($contactEmail); ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="filter-item">
+            <label for="filter_owner">Owner</label>
+            <select id="filter_owner" data-field="owner">
+              <option value="">All</option>
+              <?php foreach ($options['owner'] ?? [] as $owner): ?>
+                <option value="<?php echo h($owner); ?>"><?php echo h($owner); ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="filter-item">
+            <label for="filter_status">Status</label>
+            <select id="filter_status" data-field="status">
+              <option value="">All</option>
+              <?php foreach ($statusOptions as $status): ?>
+                <option value="<?php echo h($status); ?>"><?php echo h($status); ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="filter-item">
+            <label for="filter_business_unit">Business unit</label>
+            <select id="filter_business_unit" data-field="business_unit">
+              <option value="">All</option>
+              <?php foreach ($options['business_unit'] ?? [] as $businessUnit): ?>
+                <option value="<?php echo h($businessUnit); ?>"><?php echo h($businessUnit); ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="filter-item">
+            <label for="filter_inquiries">Inquiry</label>
+            <select id="filter_inquiries" data-field="inquiries">
+              <option value="">All</option>
+              <?php foreach ($options['inquiries'] ?? [] as $inquiryValue): ?>
+                <option value="<?php echo h($inquiryValue); ?>"><?php echo h($inquiryValue); ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+        </div>
         <table>
           <thead>
             <tr>
               <th>Select</th>
               <th>ID</th>
               <th>Platform</th>
+              <th>Business unit</th>
               <th>Contact</th>
               <th>Owner</th>
               <th>Status</th>
@@ -292,15 +366,23 @@ function h(?string $value): string
           </thead>
           <tbody>
             <?php if (!$leads): ?>
-              <tr><td colspan="10" style="text-align:center; padding:18px; color:var(--muted);">No leads found.</td></tr>
+              <tr><td colspan="11" style="text-align:center; padding:18px; color:var(--muted);">No leads found.</td></tr>
             <?php else: ?>
               <?php foreach ($leads as $lead): ?>
-                <tr>
+                 <tr
+                  data-platform="<?php echo h(strtolower((string) $lead['platform'])); ?>"
+                  data-contact_email="<?php echo h(strtolower((string) $lead['contact_email'])); ?>"
+                  data-owner="<?php echo h(strtolower((string) $lead['owner'])); ?>"
+                  data-status="<?php echo h(strtolower((string) $lead['status'])); ?>"
+                  data-business_unit="<?php echo h(strtolower((string) $lead['business_unit'])); ?>"
+                  data-inquiries="<?php echo h(strtolower((string) $lead['inquiries'])); ?>"
+                >
                   <td>
                     <input type="checkbox" form="bulk-delete-form" name="selected_ids[]" value="<?php echo h((string) $lead['id']); ?>" aria-label="Select lead <?php echo h((string) $lead['id']); ?>">
                   </td>
                   <td class="badge">#<?php echo h((string) $lead['id']); ?></td>
                   <td><?php echo h($lead['platform']); ?></td>
+                  <td><?php echo h($lead['business_unit']); ?></td>
                   <td>
                     <div><?php echo h($lead['contact_email']); ?></div>
                     <small style="color:var(--muted);"><?php echo h($lead['mobile_number']); ?></small>
@@ -337,11 +419,100 @@ function h(?string $value): string
         </table>
       </div>
     </section>
-  </main>
+   </main>
   <footer class="footer">
     <div>Created by | PMO Team</div>
     <a href="https://elsewedymachinery.com" target="_blank" rel="noopener noreferrer">Elsewedy Machinery</a>
     <div>2025</div>
   </footer>
+  <script>
+    const leadsData = <?php echo $leadsForJs ?: '[]'; ?>;
+
+    const flashMessage = <?php echo json_encode($message, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
+    const flashError = <?php echo json_encode($error, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
+    if (flashMessage) {
+      alert(flashMessage);
+    }
+    if (flashError) {
+      alert(flashError);
+    }
+
+    const leadIdInput = document.getElementById('lead_id');
+    const platformSelect = document.getElementById('platform');
+    const contactInput = document.getElementById('contact_email');
+    const mobileInput = document.getElementById('mobile_number');
+    const inquiryInput = document.getElementById('inquiries');
+    const businessUnitSelect = document.getElementById('business_unit');
+    const ownerInput = document.getElementById('owner');
+    const statusSelect = document.getElementById('status');
+    const leadDateInput = document.getElementById('lead_date');
+    const responseDateInput = document.getElementById('response_date');
+    const responseTimeInput = document.getElementById('response_time');
+    const noteInput = document.getElementById('note');
+
+    function ensureOption(selectEl, value) {
+      if (!selectEl || !value) return;
+      const exists = Array.from(selectEl.options).some(opt => opt.value === value);
+      if (!exists) {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        selectEl.appendChild(option);
+      }
+    }
+
+    function fillFormFromLead(lead) {
+      if (!lead) return;
+      ensureOption(platformSelect, lead.platform);
+      ensureOption(businessUnitSelect, lead.business_unit);
+      platformSelect.value = lead.platform || '';
+      businessUnitSelect.value = lead.business_unit || '';
+      contactInput.value = lead.contact_email || '';
+      mobileInput.value = lead.mobile_number || '';
+      inquiryInput.value = lead.inquiries || '';
+      ownerInput.value = lead.owner || '';
+      ensureOption(statusSelect, lead.status);
+      statusSelect.value = lead.status || 'Open';
+      leadDateInput.value = lead.lead_date || '';
+      responseDateInput.value = lead.response_date || '';
+      responseTimeInput.value = lead.response_time || '';
+      noteInput.value = lead.note || '';
+    }
+
+    const handleLeadLookup = () => {
+      const enteredId = leadIdInput.value.trim();
+      if (!enteredId) return;
+      const matchedLead = leadsData.find(lead => String(lead.id) === enteredId);
+      fillFormFromLead(matchedLead);
+    };
+
+    leadIdInput?.addEventListener('change', handleLeadLookup);
+    leadIdInput?.addEventListener('input', handleLeadLookup);
+
+    const filterControls = document.querySelectorAll('.filter-bar select[data-field]');
+    const tableRows = document.querySelectorAll('tbody tr[data-platform]');
+
+    function filterRows() {
+      tableRows.forEach(row => {
+        let visible = true;
+        filterControls.forEach(select => {
+          const selectedValue = select.value.trim().toLowerCase();
+          if (!selectedValue) return;
+          const field = select.dataset.field;
+          const rowValue = (row.dataset[field] || '').toLowerCase();
+          if (rowValue !== selectedValue) {
+            visible = false;
+          }
+        });
+        row.style.display = visible ? '' : 'none';
+      });
+    }
+
+    filterControls.forEach(select => {
+      select.addEventListener('change', filterRows);
+    });
+
+    filterRows();
+  </script>
 </body>
 </html>
