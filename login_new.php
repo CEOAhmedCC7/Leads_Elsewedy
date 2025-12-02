@@ -65,8 +65,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
   <div class="login-viewport">
     <div class="login-card">
-      <div class="logo-mark">EM</div>
-      <h1>Welcome back</h1>
+      <div class="logo-mark logo-img-wrap">
+        <img src="elsewedy_logo.jpg" alt="Elsewedy Machinery logo" class="logo-img">
+      </div>
+      <h1>Elsewedy Leads Desk</h1>
       <p>Secure access to the Elsewedy Machinery leads desk.</p>
       <?php if ($error): ?>
         <div class="alert"><?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?></div>
@@ -84,11 +86,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <button type="submit" class="btn btn-primary">Sign in</button>
         </div>
       </form>
-      <div class="helper-row">
-        <span class="badge">Elsewedy Machinery</span>
-        <small>Role-based access with active state.</small>
-      </div>
-    </div>
-  </div>
+    <div class="helper-row">␊
+        <span class="badge">Elsewedy Machinery</span>␊
+        <small>Created by | PMO Team</small>
+      </div>␊
+    </div>␊
+  </div>␊
 </body>
 </html>

@@ -48,19 +48,19 @@ try {
                     $stmt = $pdo->prepare('INSERT INTO leads_tracking (platform, contact_email, mobile_number, inquiries, business_unit, owner, status, lead_date, response_date, response_time, note) VALUES (:platform, :contact_email, :mobile_number, :inquiries, :business_unit, :owner, :status, :lead_date, :response_date, :response_time, :note)');
                     $stmt->execute($payload);
                     $message = 'Lead created successfully.';
-                }
+        }
             }
         } elseif ($action === 'delete' && isset($_POST['id'])) {
             $stmt = $pdo->prepare('DELETE FROM leads_tracking WHERE id = :id');
             $stmt->execute([':id' => (int) $_POST['id']]);
             $message = 'Lead deleted.';
+        } elseif ($action === 'bulk_delete' && !empty($_POST['selected_ids']) && is_array($_POST['selected_ids'])) {
+            $ids = array_map('intval', $_POST['selected_ids']);
+            $placeholders = implode(',', array_fill(0, count($ids), '?'));
+            $stmt = $pdo->prepare("DELETE FROM leads_tracking WHERE id IN ($placeholders)");
+            $stmt->execute($ids);
+            $message = 'Selected leads deleted.';
         }
-    }
-
-    if (isset($_GET['edit'])) {
-        $stmt = $pdo->prepare('SELECT * FROM leads_tracking WHERE id = :id');
-        $stmt->execute([':id' => (int) $_GET['edit']]);
-        $editing = $stmt->fetch();
     }
 
     $leads = $pdo->query('SELECT * FROM leads_tracking ORDER BY lead_date DESC NULLS LAST, id DESC')->fetchAll();
@@ -85,7 +85,9 @@ function h(?string $value): string
 <body>
   <header class="navbar">
     <div class="brand">
-      <div class="brand-mark">EM</div>
+      <div class="brand-mark">
+        <img src="elsewedy_logo.jpg" alt="Elsewedy Machinery logo">
+      </div>
       <div>Elsewedy Machinery</div>
     </div>
     <h1 class="page-title">Leads Desk</h1>
@@ -129,8 +131,11 @@ function h(?string $value): string
       <div class="alert"><?php echo h($error); ?></div>
     <?php endif; ?>
 
-    <section class="panel">
+<section class="panel">
       <h2><?php echo $editing ? 'Edit lead' : 'Create lead'; ?></h2>
+      <div class="actions" style="justify-content: flex-end; margin-top:0;">
+        <a class="btn btn-secondary" href="leads_dashboard.php">Create new lead</a>
+      </div>
       <form method="POST" class="form-grid">
         <input type="hidden" name="action" value="save">
         <?php if ($editing): ?>
@@ -200,10 +205,18 @@ function h(?string $value): string
 
     <section class="panel">
       <h2>Leads table</h2>
+      <div class="table-actions">
+        <div class="badge">Manage leads</div>
+        <form method="POST" id="bulk-delete-form" style="margin:0; display:flex; gap:8px; align-items:center;">
+          <input type="hidden" name="action" value="bulk_delete">
+          <button type="submit" class="btn btn-primary" onclick="return confirm('Delete selected leads?');">Delete selected</button>
+        </form>
+      </div>
       <div class="table-wrapper">
         <table>
           <thead>
             <tr>
+              <th>Select</th>
               <th>ID</th>
               <th>Platform</th>
               <th>Contact</th>
@@ -217,10 +230,13 @@ function h(?string $value): string
           </thead>
           <tbody>
             <?php if (!$leads): ?>
-              <tr><td colspan="9" style="text-align:center; padding:18px; color:var(--muted);">No leads found.</td></tr>
+              <tr><td colspan="10" style="text-align:center; padding:18px; color:var(--muted);">No leads found.</td></tr>
             <?php else: ?>
               <?php foreach ($leads as $lead): ?>
                 <tr>
+                  <td>
+                    <input type="checkbox" form="bulk-delete-form" name="selected_ids[]" value="<?php echo h((string) $lead['id']); ?>" aria-label="Select lead <?php echo h((string) $lead['id']); ?>">
+                  </td>
                   <td class="badge">#<?php echo h((string) $lead['id']); ?></td>
                   <td><?php echo h($lead['platform']); ?></td>
                   <td>
@@ -245,11 +261,11 @@ function h(?string $value): string
                   </td>
                   <td><?php echo h($lead['note']); ?></td>
                   <td style="white-space:nowrap;">
-                    <a class="btn btn-secondary" href="?edit=<?php echo h((string) $lead['id']); ?>">Edit</a>
+                    <a class="btn btn-secondary" href="?edit=<?php echo h((string) $lead['id']); ?>">Update lead</a>
                     <form method="POST" action="" style="display:inline;">
                       <input type="hidden" name="action" value="delete">
                       <input type="hidden" name="id" value="<?php echo h((string) $lead['id']); ?>">
-                      <button type="submit" class="btn btn-primary" onclick="return confirm('Delete this lead?');">Delete</button>
+                      <button type="submit" class="btn btn-primary" onclick="return confirm('Delete this lead?');">Delete lead</button>
                     </form>
                   </td>
                 </tr>
@@ -260,5 +276,10 @@ function h(?string $value): string
       </div>
     </section>
   </main>
+  <footer class="footer">
+    <div>Created by | PMO Team</div>
+    <a href="https://elsewedymachinery.com" target="_blank" rel="noopener noreferrer">Elsewedy Machinery</a>
+    <div>2025</div>
+  </footer>
 </body>
 </html>
