@@ -361,9 +361,13 @@ tbody td {
   border: 1px solid var(--border);
 }
 
-.status-open { background: #e7f6ed; color: #1f8f4e; border-color: #b7e1c8; }
-.status-progress { background: #fff5d9; color: #c28b00; border-color: #ffe2a8; }
-.status-closed { background: #ffe7e7; color: #c41117; border-color: #ffcccc; }
+.status-qualified { background: #e7f1ff; color: #0c5aa6; border-color: #c7dcff; }
+.status-quotation { background: #fff2df; color: #b46800; border-color: #ffd6a3; }
+.status-negotiation { background: #e9f7f0; color: #1f7a3e; border-color: #bfe5cb; }
+.status-award { background: #f1f7e8; color: #6b8400; border-color: #dbe7b4; }
+.status-disqualified { background: #fde9ed; color: #c1272d; border-color: #f9c5cf; }
+.status-onhold { background: #eef0ff; color: #4d54c6; border-color: #cdd1ff; }
+.status-default { background: #f3f4f6; color: #4b5563; border-color: #e5e7eb; }
 
 .alert {
   padding: 12px 14px;
@@ -372,6 +376,50 @@ tbody td {
   background: #fff4f5;
   color: var(--secondary);
   margin-bottom: 12px;
+}
+
+.toast-stack {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 1000;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 240px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--border);
+  background: #ffffff;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.toast-icon {
+  font-size: 18px;
+}
+
+.toast-message {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.toast-success { border-color: #b7e1c8; background: #f0f8f3; }
+.toast-create { border-color: #c7dcff; background: #f2f6ff; }
+.toast-update { border-color: #ffe2a8; background: #fffbf1; }
+.toast-delete { border-color: #f9c5cf; background: #fff3f6; }
+.toast-warning { border-color: #ffd6a3; background: #fff8ef; }
+.toast-error { border-color: #ffcccc; background: #fff1f1; }
+
+.toast-hide {
+  opacity: 0;
+  transform: translateY(-6px);
 }
 
 .login-viewport {

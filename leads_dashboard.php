@@ -10,8 +10,9 @@ if (!isset($_SESSION['user'])) {
     exit;
 }
 
- $user = $_SESSION['user'];
+$user = $_SESSION['user'];
  $message = '';
+$messageType = '';
 $error = '';
 $editing = null;
 
@@ -22,15 +23,20 @@ $platformOptions = [
     'Instagram',
     'LinkedIn',
     'Call',
+    'E-mail',
+    'Tiktok',
     'Others',
 ];
 
 $businessUnits = [
-    'MEP',
-    'Heavy Equipment',
+    'Sany',
+    'Hitachi',
+    'Elevators',
+    'Partnership Opp',
+    'Pumps',
 ];
   $options = [];
-  $statusOptions = ['Open', 'In Progress', 'Closed'];
+  $statusOptions = ['Qualified', 'Quotation', 'Negotiation', 'Award', 'Disqualified', 'Onhold'];
 
 try {
     $pdo = get_pdo();
@@ -40,7 +46,7 @@ try {
 
         if ($action === 'save') {
             $leadId = isset($_POST['id']) ? (int) $_POST['id'] : null;
-            $payload = [
+           $payload = [
                 'platform' => trim($_POST['platform'] ?? ''),
                 'contact_email' => trim($_POST['contact_email'] ?? ''),
                 'mobile_number' => trim($_POST['mobile_number'] ?? ''),
@@ -48,35 +54,60 @@ try {
                 'business_unit' => trim($_POST['business_unit'] ?? ''),
                 'owner' => trim($_POST['owner'] ?? $user['name']),
                 'status' => trim($_POST['status'] ?? ''),
-                'lead_date' => $_POST['lead_date'] ?? null,
-                'response_date' => $_POST['response_date'] ?? null,
-                'response_time' => $_POST['response_time'] !== '' ? (int) $_POST['response_time'] : null,
+                'lead_date' => trim($_POST['lead_date'] ?? ''),
+                'response_date' => trim($_POST['response_date'] ?? ''),
+                'response_time' => null,
                 'note' => trim($_POST['note'] ?? ''),
             ];
 
-            if ($payload['platform'] === '' || $payload['contact_email'] === '') {
-                $error = 'Platform and contact email are required.';
-            } else {
+            $missingFields = [];
+            foreach (['platform', 'contact_email', 'mobile_number', 'business_unit', 'owner', 'status', 'lead_date'] as $field) {
+                if ($payload[$field] === '') {
+                    $missingFields[] = $field;
+                }
+            }
+
+            $payload['response_date'] = $payload['response_date'] !== '' ? $payload['response_date'] : null;
+
+            if ($payload['lead_date'] && $payload['response_date']) {
+                try {
+                    $leadDate = new DateTime($payload['lead_date']);
+                    $responseDate = new DateTime($payload['response_date']);
+                    $payload['response_time'] = max(0, (int) $leadDate->diff($responseDate)->format('%a'));
+                } catch (Throwable $e) {
+                    $error = 'Invalid date provided for lead or response date.';
+                }
+            }
+
+            if ($missingFields) {
+                $error = 'Please fill in all required fields.';
+            }
+
+            if (!$error) {
                 if ($leadId) {
                     $stmt = $pdo->prepare('UPDATE leads_tracking SET platform = :platform, contact_email = :contact_email, mobile_number = :mobile_number, inquiries = :inquiries, business_unit = :business_unit, owner = :owner, status = :status, lead_date = :lead_date, response_date = :response_date, response_time = :response_time, note = :note WHERE id = :id');
                     $stmt->execute($payload + ['id' => $leadId]);
                     $message = 'Lead updated successfully.';
+                    $messageType = 'update';
                 } else {
                     $stmt = $pdo->prepare('INSERT INTO leads_tracking (platform, contact_email, mobile_number, inquiries, business_unit, owner, status, lead_date, response_date, response_time, note) VALUES (:platform, :contact_email, :mobile_number, :inquiries, :business_unit, :owner, :status, :lead_date, :response_date, :response_time, :note)');
                     $stmt->execute($payload);
                     $message = 'Lead created successfully.';
-        }
+                    $messageType = 'create';
+                }
             }
         } elseif ($action === 'delete' && isset($_POST['id'])) {
             $stmt = $pdo->prepare('DELETE FROM leads_tracking WHERE id = :id');
             $stmt->execute([':id' => (int) $_POST['id']]);
-            $message = 'Lead deleted.';
+            $message = 'Lead deleted successfully.';
+            $messageType = 'delete';
         } elseif ($action === 'bulk_delete' && !empty($_POST['selected_ids']) && is_array($_POST['selected_ids'])) {
             $ids = array_map('intval', $_POST['selected_ids']);
             $placeholders = implode(',', array_fill(0, count($ids), '?'));
             $stmt = $pdo->prepare("DELETE FROM leads_tracking WHERE id IN ($placeholders)");
             $stmt->execute($ids);
-            $message = 'Selected leads deleted.';
+            $message = 'Selected leads deleted successfully.';
+            $messageType = 'delete';
         }
     }
 
@@ -100,10 +131,10 @@ try {
           $options[$field] = $stmt->fetchAll(PDO::FETCH_COLUMN);
       }
 
-   $statusOptions = array_unique(array_merge(['Open', 'In Progress', 'Closed'], $options['status'] ?? []));
-    } catch (Throwable $e) {
-      $error = format_db_error($e, 'leads_tracking table');
-      $leads = [];
+   $statusOptions = array_unique(array_merge(['Qualified', 'Quotation', 'Negotiation', 'Award', 'Disqualified', 'Onhold'], $options['status'] ?? []));
+    } catch (Throwable $e) { 
+      $error = format_db_error($e, 'leads_tracking table'); 
+      $leads = []; 
     }
 
     $leadsForJs = json_encode($leads, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
@@ -187,8 +218,7 @@ function h(?string $value): string
         </div>
         <div>
           <label class="label" for="mobile_number">Mobile number</label>
-          <input class="input" list="mobile-number-options" type="text" id="mobile_number" name="mobile_number" value="<?php echo h($editing['mobile_number'] ?? ''); ?>" placeholder="+20 ...">
-          <datalist id="mobile-number-options">
+                <input class="input" list="mobile-number-options" type="text" id="mobile_number" name="mobile_number" value="<?php echo h($editing['mobile_number'] ?? ''); ?>" placeholder="+20 ..." required>
             <?php foreach ($options['mobile_number'] ?? [] as $mobileNumber): ?>
               <option value="<?php echo h($mobileNumber); ?>"></option>
             <?php endforeach; ?>
@@ -205,7 +235,7 @@ function h(?string $value): string
         </div>
         <div>
           <label class="label" for="business_unit">Business unit</label>
-<select id="business_unit" name="business_unit">
+<select id="business_unit" name="business_unit" required>
             <option value="" disabled <?php echo empty($editing['business_unit']) ? 'selected' : ''; ?>>Select a business unit</option>
             <?php
               $currentBusinessUnit = $editing['business_unit'] ?? '';
@@ -219,7 +249,7 @@ function h(?string $value): string
         </div>
         <div>
           <label class="label" for="owner">Owner</label>
-          <input class="input" list="owner-options" type="text" id="owner" name="owner" value="<?php echo h($editing['owner'] ?? $user['name']); ?>" placeholder="Assigned owner">
+          <input class="input" list="owner-options" type="text" id="owner" name="owner" value="<?php echo h($editing['owner'] ?? $user['name']); ?>" placeholder="Assigned owner" required>
           <datalist id="owner-options">
             <?php foreach ($options['owner'] ?? [] as $owner): ?>
               <option value="<?php echo h($owner); ?>"></option>
@@ -228,23 +258,23 @@ function h(?string $value): string
         </div>
         <div>
           <label class="label" for="status">Status</label>
-          <select id="status" name="status">
-            <?php
-              $currentStatus = $editing['status'] ?? 'Open';
-              foreach ($statusOptions as $status) {
-                  $selected = $currentStatus === $status ? 'selected' : '';
-                  echo '<option value="' . h($status) . '" ' . $selected . '>' . h($status) . '</option>';
+          <select id="status" name="status" required>
+            <?php 
+              $currentStatus = $editing['status'] ?? 'Qualified';
+              foreach ($statusOptions as $status) { 
+                  $selected = $currentStatus === $status ? 'selected' : ''; 
+                  echo '<option value="' . h($status) . '" ' . $selected . '>' . h($status) . '</option>'; 
               }
             ?>
           </select>
         </div>
         <div>
           <label class="label" for="lead_date">Lead date</label>
-          <input class="input" type="date" id="lead_date" name="lead_date" value="<?php echo h($editing['lead_date'] ?? ''); ?>">
+          <input class="input" type="date" id="lead_date" name="lead_date" value="<?php echo h($editing['lead_date'] ?? ''); ?>" required>
         </div>
         <div>
-          <label class="label" for="response_date">Response date</label>
-          <input class="input" type="date" id="response_date" name="response_date" value="<?php echo h($editing['response_date'] ?? ''); ?>">
+          <label class="label" for="response_time">Response time (days)</label>
+          <input class="input" type="number" min="0" id="response_time" name="response_time" value="<?php echo h($editing['response_time'] ?? ''); ?>" placeholder="Calculated automatically" readonly>
         </div>
         <div>
           <label class="label" for="response_time">Response time (mins)</label>
@@ -297,7 +327,7 @@ function h(?string $value): string
     <section class="panel">
       <h2>Leads table</h2>
  <div class="table-actions"> 
-        <div class="badge">Manage leads</div> 
+        <!-- <div class="badge">Manage leads</div>  -->
         <form method="POST" id="bulk-delete-form" class="table-actions-form">
           <input type="hidden" name="action" value="bulk_delete"> 
           <button type="submit" class="btn btn-primary" onclick="return confirm('Delete selected leads?');">Delete selected</button> 
@@ -393,9 +423,9 @@ function h(?string $value): string
                   <td>
                     <input type="checkbox" form="bulk-delete-form" name="selected_ids[]" value="<?php echo h((string) $lead['id']); ?>" aria-label="Select lead <?php echo h((string) $lead['id']); ?>">
                   </td>
-                  <td class="badge">#<?php echo h((string) $lead['id']); ?></td>
-                  <td><?php echo h($lead['platform']); ?></td>
-                 <td><?php echo h($lead['business_unit']); ?></td> 
+                  <td>#<?php echo h((string) $lead['id']); ?></td>
+                  <td><?php echo h($lead['platform']); ?></td> 
+                 <td><?php echo h($lead['business_unit']); ?></td>
                   <td> 
                     <div><?php echo h($lead['contact_email']); ?></div> 
                     <small class="muted-text"><?php echo h($lead['mobile_number']); ?></small>
@@ -404,17 +434,23 @@ function h(?string $value): string
                   <td>
                     <?php
                       $status = strtolower((string) $lead['status']);
-                      $pillClass = 'status-pill';
-                      if ($status === 'open') { $pillClass .= ' status-open'; }
-                      elseif ($status === 'in progress') { $pillClass .= ' status-progress'; }
-                      elseif ($status === 'closed') { $pillClass .= ' status-closed'; }
+                      $statusClasses = [
+                          'qualified' => 'status-qualified',
+                          'quotation' => 'status-quotation',
+                          'negotiation' => 'status-negotiation',
+                          'award' => 'status-award',
+                          'disqualified' => 'status-disqualified',
+                          'onhold' => 'status-onhold',
+                      ];
+                      $pillClass = 'status-pill ' . ($statusClasses[$status] ?? 'status-default');
                     ?>
                     <span class="<?php echo $pillClass; ?>"><?php echo h($lead['status']); ?></span>
                   </td>
+                  </td>
                   <td><?php echo h($lead['lead_date']); ?></td>
                   <td> 
-                    <div><?php echo h($lead['response_date']); ?></div> 
-                    <small class="muted-text"><?php echo h($lead['response_time']); ?> mins</small>
+                   <div><?php echo h($lead['response_date']); ?></div>
+                    <small class="muted-text"><?php echo $lead['response_time'] === null ? '—' : h((string) $lead['response_time']) . ' days'; ?></small>
                   </td> 
                   <td><?php echo h($lead['note']); ?></td> 
                   <td class="cell-actions">
@@ -443,12 +479,49 @@ function h(?string $value): string
     const leadsData = <?php echo $leadsForJs ?: '[]'; ?>;
 
     const flashMessage = <?php echo json_encode($message, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
+    const flashMessageType = <?php echo json_encode($messageType, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
     const flashError = <?php echo json_encode($error, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
+
+    const toastStack = document.createElement('div');
+    toastStack.className = 'toast-stack';
+    document.body.appendChild(toastStack);
+
+    function showToast(type, text) {
+      if (!text) return;
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+
+      const iconMap = {
+        success: '✔️',
+        create: '🆕',
+        update: '✏️',
+        delete: '🗑️',
+        warning: '⚠️',
+        error: '❌',
+      };
+
+      const label = document.createElement('span');
+      label.className = 'toast-icon';
+      label.textContent = iconMap[type] || iconMap.success;
+
+      const message = document.createElement('div');
+      message.className = 'toast-message';
+      message.textContent = text;
+
+      toast.append(label, message);
+      toastStack.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.add('toast-hide');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
     if (flashMessage) {
-      alert(flashMessage);
+      showToast(flashMessageType || 'success', flashMessage);
     }
     if (flashError) {
-      alert(flashError);
+      showToast('error', flashError);
     }
 
     const leadIdInput = document.getElementById('lead_id');
@@ -469,10 +542,10 @@ function h(?string $value): string
     const deleteButton = document.getElementById('delete-lead-btn');
     const initialExisting = <?php echo $editing ? 'true' : 'false'; ?>;
 
-    function setActionAvailability(hasExistingLead) {
-      if (createButton) {
-        createButton.disabled = hasExistingLead;
-        createButton.setAttribute('aria-disabled', hasExistingLead ? 'true' : 'false');
+ function setActionAvailability(hasExistingLead) { 
+      if (createButton) { 
+        createButton.disabled = hasExistingLead; 
+        createButton.setAttribute('aria-disabled', hasExistingLead ? 'true' : 'false'); 
       }
       if (updateButton) {
         updateButton.disabled = !hasExistingLead;
@@ -482,12 +555,27 @@ function h(?string $value): string
         deleteButton.disabled = !hasExistingLead;
         deleteButton.setAttribute('aria-disabled', !hasExistingLead ? 'true' : 'false');
       }
-      if (!hasExistingLead && deleteFormIdInput) {
+    if (!hasExistingLead && deleteFormIdInput) {
         deleteFormIdInput.value = '';
       }
     }
 
     setActionAvailability(initialExisting);
+
+    function updateResponseTime() {
+      if (!responseTimeInput || !leadDateInput || !responseDateInput) return;
+      const leadDateValue = leadDateInput.value;
+      const responseDateValue = responseDateInput.value;
+      if (!leadDateValue || !responseDateValue) {
+        responseTimeInput.value = '';
+        return;
+      }
+      const leadDateObj = new Date(leadDateValue);
+      const responseDateObj = new Date(responseDateValue);
+      const diffMs = responseDateObj.getTime() - leadDateObj.getTime();
+      const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+      responseTimeInput.value = diffDays >= 0 ? diffDays : '';
+    }
 
     function ensureOption(selectEl, value) {
       if (!selectEl || !value) return;
@@ -500,11 +588,14 @@ function h(?string $value): string
       }
     }
 
-    function fillFormFromLead(lead) {
- if (!lead) {
+   function fillFormFromLead(lead) {
+      if (!lead) {
         setActionAvailability(false);
+        if (responseDateInput) responseDateInput.value = '';
+        if (responseTimeInput) responseTimeInput.value = '';
         return;
-      }      ensureOption(platformSelect, lead.platform);
+      }
+      ensureOption(platformSelect, lead.platform);
       ensureOption(businessUnitSelect, lead.business_unit);
       platformSelect.value = lead.platform || '';
       businessUnitSelect.value = lead.business_unit || '';
@@ -512,11 +603,12 @@ function h(?string $value): string
       mobileInput.value = lead.mobile_number || '';
       inquiryInput.value = lead.inquiries || '';
       ownerInput.value = lead.owner || '';
- ensureOption(statusSelect, lead.status);
-      statusSelect.value = lead.status || 'Open';
+      ensureOption(statusSelect, lead.status);
+      statusSelect.value = lead.status || 'Qualified';
       leadDateInput.value = lead.lead_date || '';
       responseDateInput.value = lead.response_date || '';
       responseTimeInput.value = lead.response_time || '';
+      updateResponseTime();
       noteInput.value = lead.note || '';
       if (deleteFormIdInput) {
         deleteFormIdInput.value = lead.id || '';
@@ -525,9 +617,11 @@ function h(?string $value): string
     }
 
     const handleLeadLookup = () => {
-     const enteredId = leadIdInput.value.trim();
+      const enteredId = leadIdInput.value.trim();
       if (!enteredId) {
         setActionAvailability(false);
+        if (responseDateInput) responseDateInput.value = '';
+        if (responseTimeInput) responseTimeInput.value = '';
         return;
       }
       const matchedLead = leadsData.find(lead => String(lead.id) === enteredId);
@@ -537,6 +631,12 @@ function h(?string $value): string
 
     leadIdInput?.addEventListener('change', handleLeadLookup);
     leadIdInput?.addEventListener('input', handleLeadLookup);
+
+    leadDateInput?.addEventListener('change', updateResponseTime);
+    responseDateInput?.addEventListener('change', updateResponseTime);
+    responseDateInput?.addEventListener('input', updateResponseTime);
+
+    updateResponseTime();
 
     const filterControls = document.querySelectorAll('.filter-bar select[data-field]');
     const tableRows = document.querySelectorAll('tbody tr[data-platform]');
