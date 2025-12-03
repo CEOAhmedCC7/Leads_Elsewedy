@@ -445,11 +445,11 @@ function h(?string $value): string
                   <td>#<?php echo h((string) $lead['id']); ?></td>
                   <td><?php echo h($lead['platform']); ?></td> 
                  <td><?php echo h($lead['business_unit']); ?></td>
-                  <td> 
-                    <div><?php echo h($lead['contact_email']); ?></div> 
-                    <small class="muted-text"><?php echo h($lead['mobile_number']); ?></small>
-                  </td> 
-                  <td><?php echo h($lead['owner']); ?></td> 
+                      <td class="contact-cell">
+                    <div><?php echo h($lead['contact_email']); ?></div>
+                    <small class="muted-text"><?php echo h($lead['mobile_number']); ?></small>␊
+                  </td>
+                  <td class="owner-cell"><?php echo h($lead['owner']); ?></td>
                   <td>
                     <?php
                       $status = strtolower((string) $lead['status']);
@@ -476,9 +476,9 @@ function h(?string $value): string
                     </small>
                   </td>
                   <td class="cell-actions">
-            <button
+             <button
               type="button"
-              class="btn btn-secondary btn-compact view-details-btn"
+              class="btn btn-details btn-compact view-details-btn"
               data-lead-id="<?php echo h((string) $lead['id']); ?>"
             >
               View details

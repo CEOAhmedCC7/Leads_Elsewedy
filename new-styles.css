@@ -350,6 +350,12 @@ table {
   font-weight: 700;
 }
 
+.contact-cell,
+.owner-cell {
+  white-space: normal;
+  word-break: break-word;
+}
+
 .cell-actions {
   white-space: nowrap;
   display: flex;
