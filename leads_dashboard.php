@@ -180,22 +180,26 @@ function h(?string $value): string
   <main class="main">
 
 
-    <section class="panel">
+ <section class="panel">
       <h2><?php echo $editing ? 'Edit lead' : 'Create lead'; ?></h2>
-      <form method="POST" class="form-grid" id="lead-form">
+      <form method="POST" id="lead-form">
         <input type="hidden" name="action" value="save">
-        <div>
-          <label class="label" for="lead_id">Lead ID</label>
-  <input class="input" list="lead-id-options" type="text" id="lead_id" name="id" value="<?php echo h((string) ($editing['id'] ?? '')); ?>" placeholder="Enter existing ID or leave blank">
-          <datalist id="lead-id-options">
-            <?php foreach ($leads as $lead): ?>
-              <option value="<?php echo h((string) $lead['id']); ?>"></option>
-            <?php endforeach; ?>
-          </datalist>
-        </div>
-        <div>
-          <label class="label" for="platform">Platform</label>
-          <select id="platform" name="platform" required>
+        <div class="form-grid">
+          <div>
+            <div class="label-row">
+              <label class="label" for="lead_id">Lead ID</label>
+              <small class="field-note"><em>Leave blank to create new</em></small>
+            </div>
+            <input class="input" list="lead-id-options" type="text" id="lead_id" name="id" value="<?php echo h((string) ($editing['id'] ?? '')); ?>" placeholder="Enter existing ID or leave blank">
+            <datalist id="lead-id-options">
+              <?php foreach ($leads as $lead): ?>
+                <option value="<?php echo h((string) $lead['id']); ?>"></option>
+              <?php endforeach; ?>
+            </datalist>
+          </div>
+          <div>
+            <label class="label" for="platform">Platform</label>
+            <select id="platform" name="platform" required>
             <option value="" disabled <?php echo empty($editing['platform']) ? 'selected' : ''; ?>>Select a platform</option>
             <?php
               $currentPlatform = $editing['platform'] ?? '';
@@ -205,92 +209,93 @@ function h(?string $value): string
                   echo '<option value="' . h($platform) . '" ' . $selected . '>' . h($platform) . '</option>';
               }
             ?>
-          </select>
-        </div>
-        <div>
-          <label class="label" for="contact_email">Contact email</label>
-          <input class="input" list="contact-email-options" type="email" id="contact_email" name="contact_email" value="<?php echo h($editing['contact_email'] ?? ''); ?>" placeholder="lead@example.com" required>
-          <datalist id="contact-email-options">
-            <?php foreach ($options['contact_email'] ?? [] as $contactEmail): ?>
-              <option value="<?php echo h($contactEmail); ?>"></option>
-            <?php endforeach; ?>
-          </datalist>
-        </div>
-        <div>
-          <label class="label" for="mobile_number">Mobile number</label>
-          <input class="input" list="mobile-number-options" type="text" id="mobile_number" name="mobile_number" value="<?php echo h($editing['mobile_number'] ?? ''); ?>" placeholder="+20 ..." required>
-          <datalist id="mobile-number-options">
-            <?php foreach ($options['mobile_number'] ?? [] as $mobileNumber): ?>
-              <option value="<?php echo h($mobileNumber); ?>"></option>
-            <?php endforeach; ?>
-          </datalist>
-        </div>
-        <div>
-          <label class="label" for="inquiries">Inquiry details</label>
-          <input class="input" list="inquiry-options" type="text" id="inquiries" name="inquiries" value="<?php echo h($editing['inquiries'] ?? ''); ?>" placeholder="Describe the inquiry" required>
-          <datalist id="inquiry-options">
-            <?php foreach ($options['inquiries'] ?? [] as $inquiryValue): ?>
-              <option value="<?php echo h($inquiryValue); ?>"></option>
-            <?php endforeach; ?>
-          </datalist>
-        </div>
-        <div>
-          <label class="label" for="business_unit">Business unit</label>
+            </select>
+          </div>
+          <div>
+            <label class="label" for="contact_email">Contact email</label>
+            <input class="input" list="contact-email-options" type="email" id="contact_email" name="contact_email" value="<?php echo h($editing['contact_email'] ?? ''); ?>" placeholder="lead@example.com" required>
+            <datalist id="contact-email-options">
+              <?php foreach ($options['contact_email'] ?? [] as $contactEmail): ?>
+                <option value="<?php echo h($contactEmail); ?>"></option>
+              <?php endforeach; ?>
+            </datalist>
+          </div>
+          <div>
+            <label class="label" for="mobile_number">Mobile number</label>
+            <input class="input" list="mobile-number-options" type="text" id="mobile_number" name="mobile_number" value="<?php echo h($editing['mobile_number'] ?? ''); ?>" placeholder="+20 ..." required>
+            <datalist id="mobile-number-options">
+              <?php foreach ($options['mobile_number'] ?? [] as $mobileNumber): ?>
+                <option value="<?php echo h($mobileNumber); ?>"></option>
+              <?php endforeach; ?>
+            </datalist>
+          </div>
+          <div>
+            <label class="label" for="inquiries">Inquiry details</label>
+            <input class="input" list="inquiry-options" type="text" id="inquiries" name="inquiries" value="<?php echo h($editing['inquiries'] ?? ''); ?>" placeholder="Describe the inquiry" required>
+            <datalist id="inquiry-options">
+              <?php foreach ($options['inquiries'] ?? [] as $inquiryValue): ?>
+                <option value="<?php echo h($inquiryValue); ?>"></option>
+              <?php endforeach; ?>
+            </datalist>
+          </div>
+          <div>
+            <label class="label" for="business_unit">Business unit</label>
 <select id="business_unit" name="business_unit" required>
-            <option value="" disabled <?php echo empty($editing['business_unit']) ? 'selected' : ''; ?>>Select a business unit</option>
-            <?php
-              $currentBusinessUnit = $editing['business_unit'] ?? '';
-              $businessUnitChoices = array_unique(array_merge($businessUnits, $options['business_unit'] ?? []));
-              foreach ($businessUnitChoices as $businessUnit) {
-                  $selected = $currentBusinessUnit === $businessUnit ? 'selected' : '';
-                  echo '<option value="' . h($businessUnit) . '" ' . $selected . '>' . h($businessUnit) . '</option>';
-              }
-            ?>
-          </select>
+              <option value="" disabled <?php echo empty($editing['business_unit']) ? 'selected' : ''; ?>>Select a business unit</option>
+              <?php
+                $currentBusinessUnit = $editing['business_unit'] ?? '';
+                $businessUnitChoices = array_unique(array_merge($businessUnits, $options['business_unit'] ?? []));
+                foreach ($businessUnitChoices as $businessUnit) {
+                    $selected = $currentBusinessUnit === $businessUnit ? 'selected' : '';
+                    echo '<option value="' . h($businessUnit) . '" ' . $selected . '>' . h($businessUnit) . '</option>';
+                }
+              ?>
+            </select>
+          </div>
+          <div>
+            <label class="label" for="owner">Owner</label>
+            <input class="input" list="owner-options" type="text" id="owner" name="owner" value="<?php echo h($editing['owner'] ?? $user['name']); ?>" placeholder="Assigned owner" required>
+            <datalist id="owner-options">
+              <?php foreach ($options['owner'] ?? [] as $owner): ?>
+                <option value="<?php echo h($owner); ?>"></option>
+              <?php endforeach; ?>
+            </datalist>
+          </div>
+          <div>
+            <label class="label" for="status">Status</label>
+            <select id="status" name="status" required>
+              <?php
+                $currentStatus = $editing['status'] ?? 'Qualified';
+                foreach ($statusOptions as $status) {
+                    $selected = $currentStatus === $status ? 'selected' : '';
+                    echo '<option value="' . h($status) . '" ' . $selected . '>' . h($status) . '</option>';
+                }
+              ?>
+            </select>
+          </div>
+          <div>
+            <label class="label" for="lead_date">Lead date</label>
+            <input class="input" type="date" id="lead_date" name="lead_date" value="<?php echo h($editing['lead_date'] ?? ''); ?>" required>
+          </div>
+          <div>
+            <label class="label" for="response_date">Response date</label>
+            <input class="input" type="date" id="response_date" name="response_date" value="<?php echo h($editing['response_date'] ?? ''); ?>">
+          </div>
+          <div>
+            <label class="label" for="response_time">Time to response (days)</label>
+            <input class="input" type="text" id="response_time" value="<?php echo h($editing['response_time'] ?? ''); ?>" placeholder="Under reviewing" readonly>
+          </div>
+          <div>
+            <label class="label" for="note">Internal note</label>
+            <input class="input" list="note-options" type="text" id="note" name="note" value="<?php echo h($editing['note'] ?? ''); ?>" placeholder="Follow-up notes" required>
+            <datalist id="note-options">
+              <?php foreach ($options['note'] ?? [] as $noteValue): ?>
+                <option value="<?php echo h($noteValue); ?>"></option>
+              <?php endforeach; ?>
+            </datalist>
+          </div>
         </div>
-        <div>
-          <label class="label" for="owner">Owner</label>
-          <input class="input" list="owner-options" type="text" id="owner" name="owner" value="<?php echo h($editing['owner'] ?? $user['name']); ?>" placeholder="Assigned owner" required>
-          <datalist id="owner-options">
-            <?php foreach ($options['owner'] ?? [] as $owner): ?>
-              <option value="<?php echo h($owner); ?>"></option>
-            <?php endforeach; ?>
-          </datalist>
-        </div>
-        <div>
-          <label class="label" for="status">Status</label>
-          <select id="status" name="status" required>
-            <?php 
-              $currentStatus = $editing['status'] ?? 'Qualified';
-              foreach ($statusOptions as $status) { 
-                  $selected = $currentStatus === $status ? 'selected' : ''; 
-                  echo '<option value="' . h($status) . '" ' . $selected . '>' . h($status) . '</option>'; 
-              }
-            ?>
-          </select>
-        </div>
-        <div>
-          <label class="label" for="lead_date">Lead date</label>
-          <input class="input" type="date" id="lead_date" name="lead_date" value="<?php echo h($editing['lead_date'] ?? ''); ?>" required>
-        </div>
-        <div>
-          <label class="label" for="response_date">Response date</label>
-          <input class="input" type="date" id="response_date" name="response_date" value="<?php echo h($editing['response_date'] ?? ''); ?>">
-        </div>
-        <div>
-          <label class="label" for="response_time">Time to response (days)</label>
-          <input class="input" type="text" id="response_time" value="<?php echo h($editing['response_time'] ?? ''); ?>" placeholder="Under reviewing" readonly>
-        </div>
-        <div>
-          <label class="label" for="note">Internal note</label>
-          <input class="input" list="note-options" type="text" id="note" name="note" value="<?php echo h($editing['note'] ?? ''); ?>" placeholder="Follow-up notes" required>
-          <datalist id="note-options">
-            <?php foreach ($options['note'] ?? [] as $noteValue): ?>
-              <option value="<?php echo h($noteValue); ?>"></option>
-            <?php endforeach; ?>
-          </datalist>
-        </div>
-       <div class="actions actions-stacked">
+        <div class="actions form-actions">
           <button
             type="submit"
             id="create-lead-btn"
@@ -331,7 +336,7 @@ function h(?string $value): string
         <!-- <div class="badge">Manage leads</div>  -->
         <form method="POST" id="bulk-delete-form" class="table-actions-form">
           <input type="hidden" name="action" value="bulk_delete">
-          <a class="dashboard-link" href="#" target="_blank" rel="noopener noreferrer">Back to dashboard</a>
+          <a class="dashboard-link" href="#" target="_blank" rel="noopener noreferrer">Dashboard</a>
           <button type="submit" class="btn btn-primary" id="bulk-delete-btn" onclick="return confirm('Delete selected leads?');" disabled aria-disabled="true">Delete selected</button>
         </form>
       </div>
@@ -415,7 +420,10 @@ function h(?string $value): string
               <th>Response date</th>
               <th>Time to response</th>
               <th>Note</th>
+              <th>Details</th>
               <th>Actions</th>
+            </tr>
+          </thead>
             </tr>
           </thead>
           <tbody>
@@ -455,9 +463,8 @@ function h(?string $value): string
                           'onhold' => 'status-onhold',
                       ];
                       $pillClass = 'status-pill ' . ($statusClasses[$status] ?? 'status-default');
-                    ?>
+                          ?>
                     <span class="<?php echo $pillClass; ?>"><?php echo h($lead['status']); ?></span>
-                  </td>
                   </td>
                   <td><?php echo h($lead['lead_date']); ?></td>
                   <td>
@@ -466,7 +473,10 @@ function h(?string $value): string
                   <td>
                     <small class="muted-text"><?php echo $lead['response_time'] === null ? 'Under reviewing' : h((string) $lead['response_time']) . ' days'; ?></small>
                   </td>
-                  <td><?php echo h($lead['note']); ?></td> 
+                    <td><?php echo h($lead['note']); ?></td>
+                  <td>
+                    <button type="button" class="btn btn-secondary btn-compact view-details-btn" data-lead-id="<?php echo h((string) $lead['id']); ?>">View details</button>
+                  </td>
                     <td class="cell-actions">
                       <a class="btn btn-info btn-compact" href="?edit=<?php echo h((string) $lead['id']); ?>">Update lead</a>
                       <form method="POST" action="" class="inline-form">
@@ -482,8 +492,18 @@ function h(?string $value): string
           </tbody>
         </table>
       </div>
-    </section>
+     </section>
    </main>
+
+  <div class="details-modal" id="details-modal" aria-hidden="true">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="details-title">Lead details</h3>
+        <button type="button" class="modal-close" aria-label="Close details">×</button>
+      </div>
+      <div class="modal-body" id="details-body"></div>
+    </div>
+  </div>
   <footer class="footer">
     <div>Created by | PMO Team</div>
     <a href="https://elsewedymachinery.com" target="_blank" rel="noopener noreferrer">Elsewedy Machinery</a>
@@ -648,11 +668,79 @@ function h(?string $value): string
     leadIdInput?.addEventListener('change', handleLeadLookup);
     leadIdInput?.addEventListener('input', handleLeadLookup);
 
-    leadDateInput?.addEventListener('change', updateResponseTime);
+      leadDateInput?.addEventListener('change', updateResponseTime);
     responseDateInput?.addEventListener('change', updateResponseTime);
     responseDateInput?.addEventListener('input', updateResponseTime);
 
     updateResponseTime();
+
+    const detailsModal = document.getElementById('details-modal');
+    const detailsBody = document.getElementById('details-body');
+    const detailsTitle = document.getElementById('details-title');
+    const modalCloseButton = document.querySelector('.modal-close');
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"]+/g, match => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+      }[match]));
+    }
+
+    function closeDetailsModal() {
+      detailsModal?.classList.remove('open');
+      detailsModal?.setAttribute('aria-hidden', 'true');
+    }
+
+    function openDetailsModal(lead) {
+      if (!detailsModal || !detailsBody || !detailsTitle) return;
+      detailsTitle.textContent = `Lead #${lead.id}`;
+      const detailRows = [
+        ['Platform', lead.platform],
+        ['Business unit', lead.business_unit],
+        ['Contact email', lead.contact_email],
+        ['Mobile number', lead.mobile_number],
+        ['Owner', lead.owner],
+        ['Status', lead.status],
+        ['Lead date', lead.lead_date],
+        ['Response date', lead.response_date || 'Under reviewing'],
+        ['Time to response', lead.response_time ? `${lead.response_time} days` : 'Under reviewing'],
+        ['Inquiry details', lead.inquiries],
+        ['Internal note', lead.note],
+      ];
+
+      detailsBody.innerHTML = detailRows.map(([label, value]) => (
+        `<div class="detail-row"><span class="detail-label">${escapeHtml(label)}</span><span class="detail-value">${escapeHtml(value || 'N/A')}</span></div>`
+      )).join('');
+
+      detailsModal.classList.add('open');
+      detailsModal.setAttribute('aria-hidden', 'false');
+    }
+
+    const detailButtons = document.querySelectorAll('.view-details-btn');
+
+    detailButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const leadId = button.dataset.leadId;
+        const lead = leadsData.find(item => String(item.id) === leadId);
+        if (lead) {
+          openDetailsModal(lead);
+        }
+      });
+    });
+
+    modalCloseButton?.addEventListener('click', closeDetailsModal);
+    detailsModal?.addEventListener('click', (event) => {
+      if (event.target === detailsModal) {
+        closeDetailsModal();
+      }
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        closeDetailsModal();
+      }
+    });
 
     function updateBulkDeleteAvailability() {
       if (!bulkDeleteButton) return;
