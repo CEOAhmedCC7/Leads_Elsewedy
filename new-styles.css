@@ -243,6 +243,12 @@ textarea {
   letter-spacing: 0.3px;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   box-shadow: 0 10px 22px rgba(0, 0, 0, 0.08);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  gap: 6px;
+  text-decoration: none;
 }
 
 .btn-compact {
@@ -259,6 +265,11 @@ textarea {
   background: var(--secondary);
   color: #fff;
   border: 1px solid var(--secondary);
+}
+
+.btn-details{
+  background: #e4b600;
+  color: #000000;
 }
 
 .btn-dark {
@@ -341,6 +352,10 @@ table {
 
 .cell-actions {
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .empty-row {
@@ -351,6 +366,16 @@ table {
 
 .inline-form {
   display: inline;
+}
+
+.table-actions .btn {
+  min-width: 140px;
+}
+
+.dashboard-link {
+  background: #000;
+  color: #fff;
+  /* border: 1px solid #000; */
 }
 
 .table-actions-form {

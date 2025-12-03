@@ -29,14 +29,15 @@ $platformOptions = [
 ];
 
 $businessUnits = [
-    'Sany',
+    'SANY',
     'Hitachi',
     'Elevators',
     'Partnership Opp',
     'Pumps',
+    'Logistics',
 ];
   $options = [];
-  $statusOptions = ['Qualified', 'Quotation', 'Negotiation', 'Award', 'Disqualified', 'Onhold'];
+  $statusOptions = ['Qualified', 'Quotation', 'Negotiations', 'Award', 'Disqualified', 'Onhold'];
 
 try {
     $pdo = get_pdo();
@@ -419,8 +420,7 @@ function h(?string $value): string
               <th>Lead date</th>
               <th>Response date</th>
   <th>Time to response</th>
-              <th>Details</th>
-              <th>Actions</th>
+              <th>Details & Actions</th>
             </tr>
           </thead>
             </tr>
@@ -475,16 +475,33 @@ function h(?string $value): string
                       <?php echo $isReviewing ? 'Under reviewing' : h((string) $lead['response_time']) . ' days'; ?>
                     </small>
                   </td>
-                  <td>
-                    <button type="button" class="btn btn-secondary btn-compact view-details-btn" data-lead-id="<?php echo h((string) $lead['id']); ?>">View details</button>
-                  </td>
-                      <form method="POST" action="" class="inline-form">
-                        <input type="hidden" name="action" value="delete">
-                        <input type="hidden" name="id" value="<?php echo h((string) $lead['id']); ?>">
-                        <button type="submit" class="btn btn-secondary btn-compact" onclick="return confirm('Delete this lead?');">Delete lead</button>
-                      </form>
-                  
-                  </td>
+                  <td class="cell-actions">
+            <button
+              type="button"
+              class="btn btn-secondary btn-compact view-details-btn"
+              data-lead-id="<?php echo h((string) $lead['id']); ?>"
+            >
+              View details
+            </button>
+                    
+            <a
+              class="btn btn-info btn-compact"
+              href="?edit=<?php echo h((string) $lead['id']); ?>"
+            >
+              Update lead
+            </a>
+            <form method="POST" action="" class="inline-form">
+              <input type="hidden" name="action" value="delete">
+              <input type="hidden" name="id" value="<?php echo h((string) $lead['id']); ?>">
+              <button
+                type="submit"
+                class="btn btn-secondary btn-compact"
+                onclick="return confirm('Delete this lead?');"
+              >
+                Delete lead
+              </button>
+            </form>
+          </td>
                 </tr>
               <?php endforeach; ?>
             <?php endif; ?>
