@@ -86,11 +86,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <button type="submit" class="btn btn-primary">Sign in</button>
         </div>
       </form>
-    <div class="helper-row">␊
-        <span class="badge">Elsewedy Machinery</span>␊
+    <div class="helper-row"> 
+        <span class="badge">Elsewedy Machinery</span> 
         <small>Created by | PMO Team</small>
-      </div>␊
-    </div>␊
-  </div>␊
+      </div> 
+    </div> 
+  </div> 
 </body>
 </html>

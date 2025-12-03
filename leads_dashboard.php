@@ -149,14 +149,7 @@ function h(?string $value): string
   <main class="main">
 
 
-    <?php if ($message): ?>
-      <div class="alert" style="background:#f0fbf4; color:#1b8b4c; border-color:#cce9d8;">&check; <?php echo h($message); ?></div>
-    <?php endif; ?>
-    <?php if ($error): ?>
-      <div class="alert"><?php echo h($error); ?></div>
-    <?php endif; ?>
-
-<section class="panel">
+    <section class="panel">
       <h2><?php echo $editing ? 'Edit lead' : 'Create lead'; ?></h2>
       <form method="POST" class="form-grid" id="lead-form">
         <input type="hidden" name="action" value="save">
@@ -266,30 +259,50 @@ function h(?string $value): string
             <?php endforeach; ?>
           </datalist>
         </div>
-        <div class="actions actions-stacked">
-          <a class="btn btn-secondary" href="leads_dashboard.php">Create new lead</a>
-          <?php if ($editing): ?>
-            <button type="submit" form="delete-form" class="btn btn-danger" onclick="return confirm('Delete this lead?');">Delete lead</button>
-          <?php endif; ?>
-          <button type="submit" class="btn btn-primary"><?php echo $editing ? 'Update lead' : 'Create lead'; ?></button>
+       <div class="actions actions-stacked">
+          <button
+            type="submit"
+            id="create-lead-btn"
+            class="btn btn-success"
+            <?php echo $editing ? 'disabled aria-disabled="true"' : ''; ?>
+          >
+            Create new lead
+          </button>
+          <button
+            type="submit"
+            id="update-lead-btn"
+            class="btn btn-info"
+            <?php echo $editing ? '' : 'disabled aria-disabled="true"'; ?>
+          >
+            Update lead
+          </button>
+          <button
+            type="submit"
+            form="delete-form"
+            id="delete-lead-btn"
+            class="btn btn-secondary"
+            onclick="return confirm('Delete this lead?');"
+            <?php echo $editing ? '' : 'disabled aria-disabled="true"'; ?>
+          >
+            Delete lead
+          </button>
         </div>
       </form>
-      <?php if ($editing): ?>
-        <form method="POST" id="delete-form" style="display:none;">
-          <input type="hidden" name="action" value="delete">
-          <input type="hidden" name="id" value="<?php echo h((string) $editing['id']); ?>">
-        </form>
-      <?php endif; ?>
+<form method="POST" id="delete-form" style="display:none;">
+        <input type="hidden" name="action" value="delete">
+        <input type="hidden" name="id" value="<?php echo h((string) ($editing['id'] ?? '')); ?>">
+      </form>
     </section>
 
     <section class="panel">
       <h2>Leads table</h2>
-      <div class="table-actions">
-        <div class="badge">Manage leads</div>
-        <form method="POST" id="bulk-delete-form" style="margin:0; display:flex; gap:8px; align-items:center;">
-          <input type="hidden" name="action" value="bulk_delete">
-          <button type="submit" class="btn btn-primary" onclick="return confirm('Delete selected leads?');">Delete selected</button>
-        </form>
+ <div class="table-actions"> 
+        <div class="badge">Manage leads</div> 
+        <form method="POST" id="bulk-delete-form" class="table-actions-form">
+          <input type="hidden" name="action" value="bulk_delete"> 
+          <button type="submit" class="btn btn-primary" onclick="return confirm('Delete selected leads?');">Delete selected</button> 
+        </form> 
+      </div> 
       </div>
  <div class="table-wrapper">
         <div class="filter-bar">
@@ -365,9 +378,9 @@ function h(?string $value): string
             </tr>
           </thead>
           <tbody>
-            <?php if (!$leads): ?>
-              <tr><td colspan="11" style="text-align:center; padding:18px; color:var(--muted);">No leads found.</td></tr>
-            <?php else: ?>
+            <?php if (!$leads): ?> 
+              <tr><td colspan="11" class="empty-row">No leads found.</td></tr>
+            <?php else: ?> 
               <?php foreach ($leads as $lead): ?>
                  <tr
                   data-platform="<?php echo h(strtolower((string) $lead['platform'])); ?>"
@@ -382,12 +395,12 @@ function h(?string $value): string
                   </td>
                   <td class="badge">#<?php echo h((string) $lead['id']); ?></td>
                   <td><?php echo h($lead['platform']); ?></td>
-                  <td><?php echo h($lead['business_unit']); ?></td>
-                  <td>
-                    <div><?php echo h($lead['contact_email']); ?></div>
-                    <small style="color:var(--muted);"><?php echo h($lead['mobile_number']); ?></small>
-                  </td>
-                  <td><?php echo h($lead['owner']); ?></td>
+                 <td><?php echo h($lead['business_unit']); ?></td> 
+                  <td> 
+                    <div><?php echo h($lead['contact_email']); ?></div> 
+                    <small class="muted-text"><?php echo h($lead['mobile_number']); ?></small>
+                  </td> 
+                  <td><?php echo h($lead['owner']); ?></td> 
                   <td>
                     <?php
                       $status = strtolower((string) $lead['status']);
@@ -399,18 +412,19 @@ function h(?string $value): string
                     <span class="<?php echo $pillClass; ?>"><?php echo h($lead['status']); ?></span>
                   </td>
                   <td><?php echo h($lead['lead_date']); ?></td>
-                  <td>
-                    <div><?php echo h($lead['response_date']); ?></div>
-                    <small style="color:var(--muted);"><?php echo h($lead['response_time']); ?> mins</small>
-                  </td>
-                  <td><?php echo h($lead['note']); ?></td>
-                  <td style="white-space:nowrap;">
-                    <a class="btn btn-secondary" href="?edit=<?php echo h((string) $lead['id']); ?>">Update lead</a>
-                    <form method="POST" action="" style="display:inline;">
-                      <input type="hidden" name="action" value="delete">
-                      <input type="hidden" name="id" value="<?php echo h((string) $lead['id']); ?>">
-                      <button type="submit" class="btn btn-primary" onclick="return confirm('Delete this lead?');">Delete lead</button>
-                    </form>
+                  <td> 
+                    <div><?php echo h($lead['response_date']); ?></div> 
+                    <small class="muted-text"><?php echo h($lead['response_time']); ?> mins</small>
+                  </td> 
+                  <td><?php echo h($lead['note']); ?></td> 
+                  <td class="cell-actions">
+                    <a class="btn btn-info" href="?edit=<?php echo h((string) $lead['id']); ?>">Update lead</a>
+                    <form method="POST" action="" class="inline-form">
+                      <input type="hidden" name="action" value="delete"> 
+                      <input type="hidden" name="id" value="<?php echo h((string) $lead['id']); ?>"> 
+                      <button type="submit" class="btn btn-secondary" onclick="return confirm('Delete this lead?');">Delete lead</button>
+                    </form> 
+                  
                   </td>
                 </tr>
               <?php endforeach; ?>
@@ -449,6 +463,31 @@ function h(?string $value): string
     const responseDateInput = document.getElementById('response_date');
     const responseTimeInput = document.getElementById('response_time');
     const noteInput = document.getElementById('note');
+    const deleteFormIdInput = document.querySelector('#delete-form input[name="id"]');
+    const createButton = document.getElementById('create-lead-btn');
+    const updateButton = document.getElementById('update-lead-btn');
+    const deleteButton = document.getElementById('delete-lead-btn');
+    const initialExisting = <?php echo $editing ? 'true' : 'false'; ?>;
+
+    function setActionAvailability(hasExistingLead) {
+      if (createButton) {
+        createButton.disabled = hasExistingLead;
+        createButton.setAttribute('aria-disabled', hasExistingLead ? 'true' : 'false');
+      }
+      if (updateButton) {
+        updateButton.disabled = !hasExistingLead;
+        updateButton.setAttribute('aria-disabled', !hasExistingLead ? 'true' : 'false');
+      }
+      if (deleteButton) {
+        deleteButton.disabled = !hasExistingLead;
+        deleteButton.setAttribute('aria-disabled', !hasExistingLead ? 'true' : 'false');
+      }
+      if (!hasExistingLead && deleteFormIdInput) {
+        deleteFormIdInput.value = '';
+      }
+    }
+
+    setActionAvailability(initialExisting);
 
     function ensureOption(selectEl, value) {
       if (!selectEl || !value) return;
@@ -462,8 +501,10 @@ function h(?string $value): string
     }
 
     function fillFormFromLead(lead) {
-      if (!lead) return;
-      ensureOption(platformSelect, lead.platform);
+ if (!lead) {
+        setActionAvailability(false);
+        return;
+      }      ensureOption(platformSelect, lead.platform);
       ensureOption(businessUnitSelect, lead.business_unit);
       platformSelect.value = lead.platform || '';
       businessUnitSelect.value = lead.business_unit || '';
@@ -471,19 +512,27 @@ function h(?string $value): string
       mobileInput.value = lead.mobile_number || '';
       inquiryInput.value = lead.inquiries || '';
       ownerInput.value = lead.owner || '';
-      ensureOption(statusSelect, lead.status);
+ ensureOption(statusSelect, lead.status);
       statusSelect.value = lead.status || 'Open';
       leadDateInput.value = lead.lead_date || '';
       responseDateInput.value = lead.response_date || '';
       responseTimeInput.value = lead.response_time || '';
       noteInput.value = lead.note || '';
+      if (deleteFormIdInput) {
+        deleteFormIdInput.value = lead.id || '';
+      }
+      setActionAvailability(true);
     }
 
     const handleLeadLookup = () => {
-      const enteredId = leadIdInput.value.trim();
-      if (!enteredId) return;
+     const enteredId = leadIdInput.value.trim();
+      if (!enteredId) {
+        setActionAvailability(false);
+        return;
+      }
       const matchedLead = leadsData.find(lead => String(lead.id) === enteredId);
       fillFormFromLead(matchedLead);
+      setActionAvailability(Boolean(matchedLead));
     };
 
     leadIdInput?.addEventListener('change', handleLeadLookup);
