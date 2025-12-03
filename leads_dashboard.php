@@ -61,7 +61,7 @@ try {
             ];
 
             $missingFields = [];
-            foreach (['platform', 'contact_email', 'mobile_number', 'business_unit', 'owner', 'status', 'lead_date'] as $field) {
+            foreach (['platform', 'contact_email', 'mobile_number', 'inquiries', 'business_unit', 'owner', 'status', 'lead_date', 'note'] as $field) {
                 if ($payload[$field] === '') {
                     $missingFields[] = $field;
                 }
@@ -218,7 +218,8 @@ function h(?string $value): string
         </div>
         <div>
           <label class="label" for="mobile_number">Mobile number</label>
-                <input class="input" list="mobile-number-options" type="text" id="mobile_number" name="mobile_number" value="<?php echo h($editing['mobile_number'] ?? ''); ?>" placeholder="+20 ..." required>
+          <input class="input" list="mobile-number-options" type="text" id="mobile_number" name="mobile_number" value="<?php echo h($editing['mobile_number'] ?? ''); ?>" placeholder="+20 ..." required>
+          <datalist id="mobile-number-options">
             <?php foreach ($options['mobile_number'] ?? [] as $mobileNumber): ?>
               <option value="<?php echo h($mobileNumber); ?>"></option>
             <?php endforeach; ?>
@@ -226,7 +227,7 @@ function h(?string $value): string
         </div>
         <div>
           <label class="label" for="inquiries">Inquiry details</label>
-          <input class="input" list="inquiry-options" type="text" id="inquiries" name="inquiries" value="<?php echo h($editing['inquiries'] ?? ''); ?>" placeholder="Describe the inquiry">
+          <input class="input" list="inquiry-options" type="text" id="inquiries" name="inquiries" value="<?php echo h($editing['inquiries'] ?? ''); ?>" placeholder="Describe the inquiry" required>
           <datalist id="inquiry-options">
             <?php foreach ($options['inquiries'] ?? [] as $inquiryValue): ?>
               <option value="<?php echo h($inquiryValue); ?>"></option>
@@ -273,16 +274,16 @@ function h(?string $value): string
           <input class="input" type="date" id="lead_date" name="lead_date" value="<?php echo h($editing['lead_date'] ?? ''); ?>" required>
         </div>
         <div>
-          <label class="label" for="response_time">Response time (days)</label>
-          <input class="input" type="number" min="0" id="response_time" name="response_time" value="<?php echo h($editing['response_time'] ?? ''); ?>" placeholder="Calculated automatically" readonly>
+          <label class="label" for="response_date">Response date</label>
+          <input class="input" type="date" id="response_date" name="response_date" value="<?php echo h($editing['response_date'] ?? ''); ?>">
         </div>
         <div>
-          <label class="label" for="response_time">Response time (mins)</label>
-          <input class="input" type="number" min="0" id="response_time" name="response_time" value="<?php echo h($editing['response_time'] ?? ''); ?>" placeholder="e.g. 45">
+          <label class="label" for="response_time">Time to response (days)</label>
+          <input class="input" type="text" id="response_time" value="<?php echo h($editing['response_time'] ?? ''); ?>" placeholder="Under reviewing" readonly>
         </div>
         <div>
           <label class="label" for="note">Internal note</label>
-          <input class="input" list="note-options" type="text" id="note" name="note" value="<?php echo h($editing['note'] ?? ''); ?>" placeholder="Follow-up notes">
+          <input class="input" list="note-options" type="text" id="note" name="note" value="<?php echo h($editing['note'] ?? ''); ?>" placeholder="Follow-up notes" required>
           <datalist id="note-options">
             <?php foreach ($options['note'] ?? [] as $noteValue): ?>
               <option value="<?php echo h($noteValue); ?>"></option>
@@ -326,13 +327,13 @@ function h(?string $value): string
 
     <section class="panel">
       <h2>Leads table</h2>
- <div class="table-actions"> 
+ <div class="table-actions">
         <!-- <div class="badge">Manage leads</div>  -->
         <form method="POST" id="bulk-delete-form" class="table-actions-form">
-          <input type="hidden" name="action" value="bulk_delete"> 
-          <button type="submit" class="btn btn-primary" onclick="return confirm('Delete selected leads?');">Delete selected</button> 
-        </form> 
-      </div> 
+          <input type="hidden" name="action" value="bulk_delete">
+          <a class="dashboard-link" href="#" target="_blank" rel="noopener noreferrer">Back to dashboard</a>
+          <button type="submit" class="btn btn-primary" id="bulk-delete-btn" onclick="return confirm('Delete selected leads?');" disabled aria-disabled="true">Delete selected</button>
+        </form>
       </div>
  <div class="table-wrapper">
         <div class="filter-bar">
@@ -351,6 +352,15 @@ function h(?string $value): string
               <option value="">All</option>
               <?php foreach ($options['contact_email'] ?? [] as $contactEmail): ?>
                 <option value="<?php echo h($contactEmail); ?>"><?php echo h($contactEmail); ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="filter-item">
+            <label for="filter_mobile_number">Phone number</label>
+            <select id="filter_mobile_number" data-field="mobile_number">
+              <option value="">All</option>
+              <?php foreach ($options['mobile_number'] ?? [] as $mobileNumber): ?>
+                <option value="<?php echo h($mobileNumber); ?>"><?php echo h($mobileNumber); ?></option>
               <?php endforeach; ?>
             </select>
           </div>
@@ -402,19 +412,21 @@ function h(?string $value): string
               <th>Owner</th>
               <th>Status</th>
               <th>Lead date</th>
-              <th>Response</th>
+              <th>Response date</th>
+              <th>Time to response</th>
               <th>Note</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            <?php if (!$leads): ?> 
-              <tr><td colspan="11" class="empty-row">No leads found.</td></tr>
+            <?php if (!$leads): ?>
+              <tr><td colspan="12" class="empty-row">No leads found.</td></tr>
             <?php else: ?> 
               <?php foreach ($leads as $lead): ?>
                  <tr
                   data-platform="<?php echo h(strtolower((string) $lead['platform'])); ?>"
                   data-contact_email="<?php echo h(strtolower((string) $lead['contact_email'])); ?>"
+                  data-mobile_number="<?php echo h(strtolower((string) $lead['mobile_number'])); ?>"
                   data-owner="<?php echo h(strtolower((string) $lead['owner'])); ?>"
                   data-status="<?php echo h(strtolower((string) $lead['status'])); ?>"
                   data-business_unit="<?php echo h(strtolower((string) $lead['business_unit'])); ?>"
@@ -448,18 +460,20 @@ function h(?string $value): string
                   </td>
                   </td>
                   <td><?php echo h($lead['lead_date']); ?></td>
-                  <td> 
+                  <td>
                    <div><?php echo h($lead['response_date']); ?></div>
-                    <small class="muted-text"><?php echo $lead['response_time'] === null ? '—' : h((string) $lead['response_time']) . ' days'; ?></small>
-                  </td> 
+                  </td>
+                  <td>
+                    <small class="muted-text"><?php echo $lead['response_time'] === null ? 'Under reviewing' : h((string) $lead['response_time']) . ' days'; ?></small>
+                  </td>
                   <td><?php echo h($lead['note']); ?></td> 
-                  <td class="cell-actions">
-                    <a class="btn btn-info" href="?edit=<?php echo h((string) $lead['id']); ?>">Update lead</a>
-                    <form method="POST" action="" class="inline-form">
-                      <input type="hidden" name="action" value="delete"> 
-                      <input type="hidden" name="id" value="<?php echo h((string) $lead['id']); ?>"> 
-                      <button type="submit" class="btn btn-secondary" onclick="return confirm('Delete this lead?');">Delete lead</button>
-                    </form> 
+                    <td class="cell-actions">
+                      <a class="btn btn-info btn-compact" href="?edit=<?php echo h((string) $lead['id']); ?>">Update lead</a>
+                      <form method="POST" action="" class="inline-form">
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="id" value="<?php echo h((string) $lead['id']); ?>">
+                        <button type="submit" class="btn btn-secondary btn-compact" onclick="return confirm('Delete this lead?');">Delete lead</button>
+                      </form>
                   
                   </td>
                 </tr>
@@ -540,6 +554,8 @@ function h(?string $value): string
     const createButton = document.getElementById('create-lead-btn');
     const updateButton = document.getElementById('update-lead-btn');
     const deleteButton = document.getElementById('delete-lead-btn');
+    const bulkDeleteButton = document.getElementById('bulk-delete-btn');
+    const bulkCheckboxes = document.querySelectorAll('input[type="checkbox"][name="selected_ids[]"]');
     const initialExisting = <?php echo $editing ? 'true' : 'false'; ?>;
 
  function setActionAvailability(hasExistingLead) { 
@@ -567,14 +583,14 @@ function h(?string $value): string
       const leadDateValue = leadDateInput.value;
       const responseDateValue = responseDateInput.value;
       if (!leadDateValue || !responseDateValue) {
-        responseTimeInput.value = '';
+        responseTimeInput.value = 'Under reviewing';
         return;
       }
       const leadDateObj = new Date(leadDateValue);
       const responseDateObj = new Date(responseDateValue);
       const diffMs = responseDateObj.getTime() - leadDateObj.getTime();
       const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
-      responseTimeInput.value = diffDays >= 0 ? diffDays : '';
+      responseTimeInput.value = diffDays >= 0 ? `${diffDays} days` : 'Under reviewing';
     }
 
     function ensureOption(selectEl, value) {
@@ -588,11 +604,11 @@ function h(?string $value): string
       }
     }
 
-   function fillFormFromLead(lead) {
+     function fillFormFromLead(lead) {
       if (!lead) {
         setActionAvailability(false);
         if (responseDateInput) responseDateInput.value = '';
-        if (responseTimeInput) responseTimeInput.value = '';
+        if (responseTimeInput) responseTimeInput.value = 'Under reviewing';
         return;
       }
       ensureOption(platformSelect, lead.platform);
@@ -607,7 +623,7 @@ function h(?string $value): string
       statusSelect.value = lead.status || 'Qualified';
       leadDateInput.value = lead.lead_date || '';
       responseDateInput.value = lead.response_date || '';
-      responseTimeInput.value = lead.response_time || '';
+      responseTimeInput.value = lead.response_time ? `${lead.response_time} days` : 'Under reviewing';
       updateResponseTime();
       noteInput.value = lead.note || '';
       if (deleteFormIdInput) {
@@ -621,7 +637,7 @@ function h(?string $value): string
       if (!enteredId) {
         setActionAvailability(false);
         if (responseDateInput) responseDateInput.value = '';
-        if (responseTimeInput) responseTimeInput.value = '';
+        if (responseTimeInput) responseTimeInput.value = 'Under reviewing';
         return;
       }
       const matchedLead = leadsData.find(lead => String(lead.id) === enteredId);
@@ -637,6 +653,19 @@ function h(?string $value): string
     responseDateInput?.addEventListener('input', updateResponseTime);
 
     updateResponseTime();
+
+    function updateBulkDeleteAvailability() {
+      if (!bulkDeleteButton) return;
+      const hasSelection = Array.from(bulkCheckboxes).some(cb => cb.checked);
+      bulkDeleteButton.disabled = !hasSelection;
+      bulkDeleteButton.setAttribute('aria-disabled', (!hasSelection).toString());
+    }
+
+    bulkCheckboxes.forEach(cb => {
+      cb.addEventListener('change', updateBulkDeleteAvailability);
+    });
+
+    updateBulkDeleteAvailability();
 
     const filterControls = document.querySelectorAll('.filter-bar select[data-field]');
     const tableRows = document.querySelectorAll('tbody tr[data-platform]');
