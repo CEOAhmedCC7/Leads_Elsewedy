@@ -194,16 +194,28 @@ function h(?string $value): string
         <input type="hidden" name="action" value="save">
         <div class="form-grid">
           <div>
-            <div class="label-row">
-              <label class="label" for="lead_id">Lead ID</label>
-              <small class="field-note"><em>Leave blank to create new</em></small>
-            </div>
-            <input class="input" list="lead-id-options" type="text" id="lead_id" name="id" value="<?php echo h((string) ($editing['id'] ?? '')); ?>" placeholder="Enter existing ID or leave blank">
-            <datalist id="lead-id-options">
-              <?php foreach ($leads as $lead): ?>
-                <option value="<?php echo h((string) $lead['id']); ?>"></option>
-              <?php endforeach; ?>
-            </datalist>
+            <label class="label" for="lead_id">Lead ID</label>
+            <?php if ($editing): ?>
+              <input
+                class="input"
+                type="text"
+                id="lead_id"
+                value="<?php echo h((string) ($editing['id'] ?? '')); ?>"
+                disabled
+                aria-disabled="true"
+              >
+              <input type="hidden" name="id" value="<?php echo h((string) ($editing['id'] ?? '')); ?>">
+            <?php else: ?>
+              <input
+                class="input"
+                type="text"
+                id="lead_id"
+                value="Assigned automatically"
+                disabled
+                aria-disabled="true"
+              >
+              <small class="field-note"><em>ID is generated automatically</em></small>
+            <?php endif; ?>
           </div>
           <div>
             <label class="label" for="platform">Platform</label>
