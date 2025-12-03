@@ -223,6 +223,12 @@ textarea {
   margin-top: 14px;
 }
 
+.action-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+}
 .actions-stacked {
   justify-content: flex-start;
   flex-wrap: wrap;
@@ -356,13 +362,22 @@ table {
   word-break: break-word;
 }
 
+.contact-col,
+.contact-cell {
+  width: 170px;
+  max-width: 170px;
+}
+
 .cell-actions {
   white-space: nowrap;
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+  flex-direction: column;
+  align-items: flex-start;
 }
+
 
 .empty-row {
   text-align: center;
@@ -406,7 +421,7 @@ thead th {
 tbody td {
   padding: 12px;
   border-bottom: 1px solid var(--border);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .badge {

@@ -305,24 +305,26 @@ function h(?string $value): string
           >
             Create new lead
           </button>
-          <button
-            type="submit"
-            id="update-lead-btn"
-            class="btn btn-info"
-            <?php echo $editing ? '' : 'disabled aria-disabled="true"'; ?>
-          >
-            Update lead
-          </button>
-          <button
-            type="submit"
-            form="delete-form"
-            id="delete-lead-btn"
-            class="btn btn-secondary"
-            onclick="return confirm('Delete this lead?');"
-            <?php echo $editing ? '' : 'disabled aria-disabled="true"'; ?>
-          >
-            Delete lead
-          </button>
+          <div class="action-stack">
+            <button
+              type="submit"
+              id="update-lead-btn"
+              class="btn btn-info"
+              <?php echo $editing ? '' : 'disabled aria-disabled="true"'; ?>
+            >
+              Update lead
+            </button>
+            <button
+              type="submit"
+              form="delete-form"
+              id="delete-lead-btn"
+              class="btn btn-secondary"
+              onclick="return confirm('Delete this lead?');"
+              <?php echo $editing ? '' : 'disabled aria-disabled="true"'; ?>
+            >
+              Delete lead
+            </button>
+          </div>
         </div>
       </form>
 <form method="POST" id="delete-form" style="display:none;">
@@ -414,7 +416,7 @@ function h(?string $value): string
               <th>ID</th>
               <th>Platform</th>
               <th>Business unit</th>
-              <th>Contact</th>
+               <th class="contact-col">Contact</th>
               <th>Owner</th>
               <th>Status</th>
               <th>Lead date</th>
