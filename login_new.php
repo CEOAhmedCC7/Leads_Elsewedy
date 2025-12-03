@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <img src="elsewedy_logo.jpg" alt="Elsewedy Machinery logo" class="logo-img">
       </div>
       <h1>Elsewedy Leads Desk</h1>
-      <p>Secure access to the Elsewedy Machinery leads desk.</p>
+      <p>Elsewedy Machinery | PMO Team </p>
       <?php if ($error): ?>
         <div class="alert"><?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?></div>
       <?php endif; ?>
@@ -87,8 +87,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
       </form>
     <div class="helper-row"> 
-        <span class="badge">Elsewedy Machinery</span> 
-        <small>Created by | PMO Team</small>
+        <!-- <span class="badge">Elsewedy Machinery</span>  -->
+<small style="color: var(--secondary);">Created by | PMO Team</small>
       </div> 
     </div> 
   </div> 
