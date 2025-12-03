@@ -45,7 +45,7 @@ try {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $action = $_POST['action'] ?? '';
 
-        if ($action === 'save') {
+          if ($action === 'save') {
             $leadId = isset($_POST['id']) ? (int) $_POST['id'] : null;
            $payload = [
                 'platform' => trim($_POST['platform'] ?? ''),
@@ -62,11 +62,18 @@ try {
             ];
 
             $missingFields = [];
-            foreach (['platform', 'contact_email', 'mobile_number', 'inquiries', 'business_unit', 'owner', 'status', 'lead_date', 'note'] as $field) {
+            foreach (['platform', 'business_unit', 'owner', 'status', 'lead_date'] as $field) {
                 if ($payload[$field] === '') {
                     $missingFields[] = $field;
                 }
             }
+
+            foreach (['contact_email', 'mobile_number', 'inquiries', 'note'] as $optionalField) {
+                if ($payload[$optionalField] === '') {
+                    $payload[$optionalField] = null;
+                }
+            }
+
 
             $payload['response_date'] = $payload['response_date'] !== '' ? $payload['response_date'] : null;
 
@@ -214,7 +221,7 @@ function h(?string $value): string
           </div>
           <div>
             <label class="label" for="contact_email">Contact email</label>
-            <input class="input" list="contact-email-options" type="email" id="contact_email" name="contact_email" value="<?php echo h($editing['contact_email'] ?? ''); ?>" placeholder="lead@example.com" required>
+            <input class="input" list="contact-email-options" type="email" id="contact_email" name="contact_email" value="<?php echo h($editing['contact_email'] ?? ''); ?>" placeholder="lead@example.com" >
             <datalist id="contact-email-options">
               <?php foreach ($options['contact_email'] ?? [] as $contactEmail): ?>
                 <option value="<?php echo h($contactEmail); ?>"></option>
@@ -223,7 +230,7 @@ function h(?string $value): string
           </div>
           <div>
             <label class="label" for="mobile_number">Mobile number</label>
-            <input class="input" list="mobile-number-options" type="text" id="mobile_number" name="mobile_number" value="<?php echo h($editing['mobile_number'] ?? ''); ?>" placeholder="+20 ..." required>
+            <input class="input" list="mobile-number-options" type="text" id="mobile_number" name="mobile_number" value="<?php echo h($editing['mobile_number'] ?? ''); ?>" placeholder="+20 ..." >
             <datalist id="mobile-number-options">
               <?php foreach ($options['mobile_number'] ?? [] as $mobileNumber): ?>
                 <option value="<?php echo h($mobileNumber); ?>"></option>
@@ -232,7 +239,7 @@ function h(?string $value): string
           </div>
           <div>
             <label class="label" for="inquiries">Inquiry details</label>
-            <input class="input" list="inquiry-options" type="text" id="inquiries" name="inquiries" value="<?php echo h($editing['inquiries'] ?? ''); ?>" placeholder="Describe the inquiry" required>
+            <input class="input" list="inquiry-options" type="text" id="inquiries" name="inquiries" value="<?php echo h($editing['inquiries'] ?? ''); ?>" placeholder="Describe the inquiry" >
             <datalist id="inquiry-options">
               <?php foreach ($options['inquiries'] ?? [] as $inquiryValue): ?>
                 <option value="<?php echo h($inquiryValue); ?>"></option>
@@ -288,7 +295,7 @@ function h(?string $value): string
           </div>
           <div>
             <label class="label" for="note">Internal note</label>
-            <input class="input" list="note-options" type="text" id="note" name="note" value="<?php echo h($editing['note'] ?? ''); ?>" placeholder="Follow-up notes" required>
+            <input class="input" list="note-options" type="text" id="note" name="note" value="<?php echo h($editing['note'] ?? ''); ?>" placeholder="Follow-up notes" >
             <datalist id="note-options">
               <?php foreach ($options['note'] ?? [] as $noteValue): ?>
                 <option value="<?php echo h($noteValue); ?>"></option>
@@ -449,7 +456,7 @@ function h(?string $value): string
                  <td><?php echo h($lead['business_unit']); ?></td>
                       <td class="contact-cell">
                     <div><?php echo h($lead['contact_email']); ?></div>
-                    <small class="muted-text"><?php echo h($lead['mobile_number']); ?></small>␊
+                    <small class="muted-text"><?php echo h($lead['mobile_number']); ?></small>
                   </td>
                   <td class="owner-cell"><?php echo h($lead['owner']); ?></td>
                   <td>
