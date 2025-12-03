@@ -336,7 +336,7 @@ function h(?string $value): string
         <!-- <div class="badge">Manage leads</div>  -->
         <form method="POST" id="bulk-delete-form" class="table-actions-form">
           <input type="hidden" name="action" value="bulk_delete">
-          <a class="dashboard-link" href="#" target="_blank" rel="noopener noreferrer">Dashboard</a>
+           <a class="btn btn-dark dashboard-link" href="#" target="_blank" rel="noopener noreferrer">Dashboard</a>
           <button type="submit" class="btn btn-primary" id="bulk-delete-btn" onclick="return confirm('Delete selected leads?');" disabled aria-disabled="true">Delete selected</button>
         </form>
       </div>
@@ -418,8 +418,7 @@ function h(?string $value): string
               <th>Status</th>
               <th>Lead date</th>
               <th>Response date</th>
-              <th>Time to response</th>
-              <th>Note</th>
+  <th>Time to response</th>
               <th>Details</th>
               <th>Actions</th>
             </tr>
@@ -428,8 +427,8 @@ function h(?string $value): string
           </thead>
           <tbody>
             <?php if (!$leads): ?>
-              <tr><td colspan="12" class="empty-row">No leads found.</td></tr>
-            <?php else: ?> 
+              <tr><td colspan="11" class="empty-row">No leads found.</td></tr>
+            <?php else: ?>
               <?php foreach ($leads as $lead): ?>
                  <tr
                   data-platform="<?php echo h(strtolower((string) $lead['platform'])); ?>"
@@ -471,14 +470,14 @@ function h(?string $value): string
                    <div><?php echo h($lead['response_date']); ?></div>
                   </td>
                   <td>
-                    <small class="muted-text"><?php echo $lead['response_time'] === null ? 'Under reviewing' : h((string) $lead['response_time']) . ' days'; ?></small>
+                    <?php $isReviewing = $lead['response_time'] === null; ?>
+                    <small class="response-time <?php echo $isReviewing ? 'pending' : 'muted-text'; ?>">
+                      <?php echo $isReviewing ? 'Under reviewing' : h((string) $lead['response_time']) . ' days'; ?>
+                    </small>
                   </td>
-                    <td><?php echo h($lead['note']); ?></td>
                   <td>
                     <button type="button" class="btn btn-secondary btn-compact view-details-btn" data-lead-id="<?php echo h((string) $lead['id']); ?>">View details</button>
                   </td>
-                    <td class="cell-actions">
-                      <a class="btn btn-info btn-compact" href="?edit=<?php echo h((string) $lead['id']); ?>">Update lead</a>
                       <form method="POST" action="" class="inline-form">
                         <input type="hidden" name="action" value="delete">
                         <input type="hidden" name="id" value="<?php echo h((string) $lead['id']); ?>">
