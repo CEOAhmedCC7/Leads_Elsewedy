@@ -42,6 +42,22 @@ $businessUnits = [
 try {
     $pdo = get_pdo();
 
+    // Make sure the leads_tracking ID sequence is ahead of existing rows to avoid
+    // duplicate key errors if the sequence falls behind (e.g., after manual inserts
+    // or data imports).
+    try {
+        $pdo->exec(
+            "SELECT setval(\n"
+            . "    pg_get_serial_sequence('leads_tracking', 'id'),\n"
+            . "    COALESCE((SELECT MAX(id) FROM leads_tracking), 0) + 1,\n"
+            . "    false\n"
+            . ")"
+        );
+    } catch (Throwable $e) {
+        // If we cannot sync the sequence, proceed without blocking the page; the
+        // outer error handling will surface database connectivity issues if any.
+    }
+
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $action = $_POST['action'] ?? '';
 
@@ -358,7 +374,7 @@ function h(?string $value): string
         <!-- <div class="badge">Manage leads</div>  -->
         <form method="POST" id="bulk-delete-form" class="table-actions-form">
           <input type="hidden" name="action" value="bulk_delete">
-           <a class="btn btn-dark dashboard-link" href="#" target="_blank" rel="noopener noreferrer">Dashboard</a>
+           <a class="btn btn-dark dashboard-link" href="http://localhost:3000/public/dashboard/dfccd2d2-a596-4ce6-ac7e-d5e7fd8a45d5" target="_blank" rel="noopener noreferrer">Dashboard</a>
           <button type="submit" class="btn btn-primary" id="bulk-delete-btn" onclick="return confirm('Delete selected leads?');" disabled aria-disabled="true">Delete selected</button>
         </form>
       </div>
